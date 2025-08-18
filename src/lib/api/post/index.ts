@@ -3,9 +3,10 @@ import { fetchApi } from "@/lib/utils";
 import { INewPost, IUpdatePost } from "@/types";
 
 
-export const createPost = async (post: INewPost, token: string) => {
+export const createPost = async (post: INewPost) => {
 
-    const response = await fetchApi("/post/create", "POST", post, token)
+
+    const response = await fetchApi("/post/create", "POST", post, getAccessToken())
 
     return response
 

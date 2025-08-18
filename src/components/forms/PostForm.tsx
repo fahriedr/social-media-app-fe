@@ -20,6 +20,10 @@ import { useUserContext } from "@/context/AuthContext";
 import { useCreatePost, useUpdatePost } from "@/lib/react-query/queries";
 import FileUploader from "../shared/FileUploader";
 import { INewPost } from "@/types";
+import Loader from "../shared/Loader";
+import { supabase } from "@/lib/supabase/supabase-client";
+import { useState } from "react";
+import { uploadFileHelper } from "@/lib/supabase/upload-file-helper";
 
 type PostFormProps = {
   post?: INewPost;
@@ -29,7 +33,12 @@ type PostFormProps = {
 const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useUserContext();
+  const { user } = useUserContext()
+  const [mediaUrls, setMediaUrls] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const userId: number = +user.id
+
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
     defaultValues: {
@@ -44,35 +53,66 @@ const PostForm = ({ post, action }: PostFormProps) => {
   const { mutateAsync: updatePost, isLoading: isLoadingUpdate } =
     useUpdatePost();
 
+  const uploadMedia = async (value: z.infer<typeof PostValidation>) => {
+    try {
+
+      let uploadedFiles: string[] = []
+
+      for (const file of value.media) {
+
+        const uploadFile = await uploadFileHelper(userId, file, "post")
+
+        if (!uploadFile) {
+          return false
+        }
+
+        console.log(uploadFile, "upload File")
+
+        uploadedFiles.push(uploadFile)
+
+      }
+
+      console.log(uploadedFiles, 'files')
+      setMediaUrls(uploadedFiles)
+
+      return true
+
+    } catch (err) {
+      console.error("Form submit error:", err);
+    }
+
+  }
+
   // Handler
   const handleSubmit = async (value: z.infer<typeof PostValidation>) => {
-    // ACTION = UPDATE
-    if (post && action === "Update") {
-      const updatedPost = await updatePost({
-        ...value,
-        postId: post.id
-      });
 
-      if (!updatedPost) {
+    setIsLoading(true)
+
+    const upload = await uploadMedia(value)
+
+    if (!upload) {
+      return false
+    }
+
+    if (action === "Create") {
+      const post = {
+        caption: value.caption,
+        media: mediaUrls
+      }
+
+      const newPost = await createPost(post)
+
+      if (!newPost) {
         toast({
           title: `${action} post failed. Please try again.`,
         });
       }
-      return navigate(`/posts/${post.$id}`);
+      navigate("/");
+
     }
 
-    // ACTION = CREATE
-    const newPost = await createPost({
-      ...value,
-      userId: user.id,
-    });
+    setIsLoading(false)
 
-    if (!newPost) {
-      toast({
-        title: `${action} post failed. Please try again.`,
-      });
-    }
-    navigate("/");
   };
 
   return (
@@ -106,7 +146,9 @@ const PostForm = ({ post, action }: PostFormProps) => {
               <FormControl>
                 <FileUploader
                   fieldChange={field.onChange}
-                  mediaUrl={post?.media.link_url}
+                  media={post?.media}
+                  multiple={true}
+                  type="post"
                 />
               </FormControl>
               <FormMessage className="shad-form_message" />
@@ -124,8 +166,8 @@ const PostForm = ({ post, action }: PostFormProps) => {
           <Button
             type="submit"
             className="shad-button_primary whitespace-nowrap"
-            disabled={isLoadingCreate || isLoadingUpdate}>
-            {(isLoadingCreate || isLoadingUpdate) && <Loader />}
+            disabled={isLoadingCreate || isLoadingUpdate || isLoading}>
+            {(isLoadingCreate || isLoadingUpdate || isLoading) && <Loader />}
             {action} Post
           </Button>
         </div>
