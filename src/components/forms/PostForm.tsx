@@ -11,7 +11,6 @@ import {
   FormLabel,
   FormMessage,
   Button,
-  Input,
   Textarea,
 } from "@/components/ui";
 import { PostValidation } from "@/lib/validation";
@@ -21,7 +20,6 @@ import { useCreatePost, useUpdatePost } from "@/lib/react-query/queries";
 import FileUploader from "../shared/FileUploader";
 import { INewPost } from "@/types";
 import Loader from "../shared/Loader";
-import { supabase } from "@/lib/supabase/supabase-client";
 import { useState } from "react";
 import { uploadFileHelper } from "@/lib/supabase/upload-file-helper";
 
@@ -48,15 +46,15 @@ const PostForm = ({ post, action }: PostFormProps) => {
   });
 
   // Query
-  const { mutateAsync: createPost, isLoading: isLoadingCreate } =
+  const { mutateAsync: createPost, isPending: isLoadingCreate } =
     useCreatePost();
-  const { mutateAsync: updatePost, isLoading: isLoadingUpdate } =
+  const { isPending: isLoadingUpdate } =
     useUpdatePost();
 
   const uploadMedia = async (value: z.infer<typeof PostValidation>) => {
     try {
 
-      let uploadedFiles: string[] = []
+      const uploadedFiles: string[] = []
 
       for (const file of value.media) {
 
@@ -66,16 +64,11 @@ const PostForm = ({ post, action }: PostFormProps) => {
           return false
         }
 
-        console.log(uploadFile, "upload File")
-
         uploadedFiles.push(uploadFile)
 
       }
 
-      console.log(uploadedFiles, 'files')
-      setMediaUrls(uploadedFiles)
-
-      return true
+      return uploadedFiles
 
     } catch (err) {
       console.error("Form submit error:", err);
@@ -88,17 +81,22 @@ const PostForm = ({ post, action }: PostFormProps) => {
 
     setIsLoading(true)
 
-    const upload = await uploadMedia(value)
+    const uploadFiles = await uploadMedia(value)
 
-    if (!upload) {
-      return false
+    if (!uploadFiles || uploadFiles.length === 0) {
+      toast({
+        title: "Upload failed. Please try again.",
+      });
+      setIsLoading(false)
     }
 
     if (action === "Create") {
-      const post = {
+      const post: INewPost = {
         caption: value.caption,
-        media: mediaUrls
+        media: uploadFiles
       }
+
+      console.log(post, "post")
 
       const newPost = await createPost(post)
 

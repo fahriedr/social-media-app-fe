@@ -278,3 +278,18 @@
     @apply flex gap-4 items-center justify-start hover:bg-transparent hover:text-white !important;
   }
 }
+
+.post-carousel .swiper-pagination {
+  position: relative !important;
+  margin-top: 1px;
+  text-align: center;
+}
+
+.post-carousel .swiper-pagination-bullet {
+  background-color: #d1d5db; /* inactive color */
+  opacity: 1;
+}
+
+.post-carousel .swiper-pagination-bullet-active {
+  background-color: #877EFF; /* active color */
+}

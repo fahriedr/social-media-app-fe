@@ -15,3 +15,15 @@ export const createPost = async (post: INewPost) => {
 export const updatePost = async (post: IUpdatePost) => {
 
 }
+
+export const getRecentPosts = async () => {
+  const response = await fetchApi("/post/home", "GET", null, getAccessToken());
+
+  return response;
+};
+
+export const getInfinitePosts = async () => {
+    const response = await fetchApi("/post/infinite", "GET", null, getAccessToken())
+
+    return response 
+}

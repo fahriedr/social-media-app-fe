@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await checkAuthUser(newToken); // fetch profile
       }
     } catch (err) {
-      console.log("User not authenticated");
+      console.log("User not authenticated:", err);
       navigate("/sign-in");
     }
   };

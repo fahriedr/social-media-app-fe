@@ -1,5 +1,6 @@
 import {
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 
@@ -8,8 +9,8 @@ import {
   signInAccount,
   signOutAccount
 } from "@/lib/api/user"
-import { INewPost, INewUser, IUpdatePost, IUpdateUser } from "@/types";
-import { createPost, updatePost } from "../api/post";
+import { INewPost, INewUser, IUpdatePost } from "@/types";
+import { createPost, getRecentPosts, updatePost } from "../api/post";
 import { QUERY_KEYS } from "./queryKeys";
 
 // ============================================================
@@ -46,22 +47,22 @@ export const useSignOutAccount = () => {
 // // POST QUERIES
 // // ============================================================
 
-// export const useGetPosts = () => {
-//   return useInfiniteQuery({
-//     queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
-//     queryFn: getInfinitePosts as any,
-//     getNextPageParam: (lastPage: any) => {
-//       // If there's no data, there are no more pages.
-//       if (lastPage && lastPage.documents.length === 0) {
-//         return null;
-//       }
+export const useGetPosts = () => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
+    queryFn: getInfinitePosts as any,
+    getNextPageParam: (lastPage: any) => {
+      // If there's no data, there are no more pages.
+      if (lastPage && lastPage.documents.length === 0) {
+        return null;
+      }
 
-//       // Use the $id of the last document as the cursor.
-//       const lastId = lastPage.documents[lastPage.documents.length - 1].$id;
-//       return lastId;
-//     },
-//   });
-// };
+      // Use the $id of the last document as the cursor.
+      const lastId = lastPage.documents[lastPage.documents.length - 1].$id;
+      return lastId;
+    },
+  });
+};
 
 // export const useSearchPosts = (searchTerm: string) => {
 //   return useQuery({
@@ -71,12 +72,12 @@ export const useSignOutAccount = () => {
 //   });
 // };
 
-// export const useGetRecentPosts = () => {
-//   return useQuery({
-//     queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
-//     queryFn: getRecentPosts,
-//   });
-// };
+export const useGetRecentPosts = () => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+    queryFn: getRecentPosts,
+  });
+};
 
 export const useCreatePost = () => {
   const queryClient = useQueryClient();
@@ -112,7 +113,7 @@ export const useUpdatePost = () => {
     mutationFn: (post: IUpdatePost) => updatePost(post),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.id],
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, data.id],
       });
     },
   });

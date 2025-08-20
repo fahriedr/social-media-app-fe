@@ -38,3 +38,29 @@ export type INewUser = {
   username: string;
   password: string;
 };
+
+
+export type IPost = {
+  id: number;
+  user_id: number;
+  caption: string;
+  user: PostUser;
+  media: PostMedia[];
+  timestamp: string;
+  _count: {
+    likes: number;
+    comments: number;
+  }
+}
+
+type PostUser = {
+  id: number;
+  username: string;
+  avatar: string;
+}
+
+type PostMedia = {
+  id: number;
+  link_url: string;
+  timestamp: string;
+}
