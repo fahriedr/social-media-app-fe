@@ -106,6 +106,7 @@ export const fetchApi = async (
       // Retry original request
       response = await makeRequest(newToken);
     } catch (error) {
+      console.log(error)
       throw new Error("Unauthorized - please log in again");
     }
   }

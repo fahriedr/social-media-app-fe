@@ -12,6 +12,7 @@ import {
 import { INewPost, INewUser, IUpdatePost } from "@/types";
 import { createPost, getRecentPosts, updatePost } from "../api/post";
 import { QUERY_KEYS } from "./queryKeys";
+import { toast } from "@/components/ui";
 
 // ============================================================
 // AUTH QUERIES
@@ -32,7 +33,12 @@ export const useSignInAccount = () => {
   return useMutation({
     mutationFn: (user: { username: string; password: string }) =>
       signInAccount(user),
-    onError: (error) => error,
+    onError: (error) => {
+      toast({
+        variant: "default",
+        title: "Login failed",
+        description: error.message, })
+    },
   });
 };
 

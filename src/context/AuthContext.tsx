@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     storeToken(accessToken);
   }, [accessToken]);
 
-  // ✅ Try to fetch new token on app start
+  // Try to fetch new token on app start
   const initializeAuth = async () => {
     try {
       // ask server for new access token using HttpOnly cookie
