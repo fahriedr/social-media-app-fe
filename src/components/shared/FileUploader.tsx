@@ -1,30 +1,35 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { FileWithPath, useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui'
+import { X } from "lucide-react"
 
 type FileUploaderProps = {
-    fieldChange: (FILES: File[]) => void;
-    media?: string[];
-    type: "post" | "profile",
-    multiple: boolean
+  fieldChange: (FILES: (File | string)[]) => void;
+  media?: string[];
+  multiple: boolean
 }
 
 
-const FileUploader = ({ fieldChange, media, type = "profile", multiple = false }: FileUploaderProps) => {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+const FileUploader = ({ fieldChange, media, multiple = false }: FileUploaderProps) => {
+  const [previews, setPreviews] = useState<string[]>(media || []);
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
-    setFiles(acceptedFiles);
-    fieldChange(acceptedFiles); // 👈 pass files back to form
-    setPreviews(acceptedFiles.map((file) => URL.createObjectURL(file)));
+    fieldChange([...previews, ...acceptedFiles]); // 👈 pass files back to form
+    setPreviews(prev => [...prev, ...acceptedFiles.map(file => URL.createObjectURL(file))]);
   }, [fieldChange]);
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
-    accept: { "image/*": [".png", ".jpeg", ".jpg"] },
+    accept: { "image/*": [".png", ".jpeg", ".jpg", "webp"] },
     multiple,
+    maxFiles: 3
   });
+
+  const removeFile = (index: number) => {
+    const updated = previews.filter((_, i) => i !== index);
+    setPreviews(updated);
+    fieldChange(updated);
+  };
 
   return (
     <div {...getRootProps()} className="flex flex-center flex-col bg-dark-3 rounded-xl cursor-pointer">
@@ -34,12 +39,23 @@ const FileUploader = ({ fieldChange, media, type = "profile", multiple = false }
         <>
           <div className="grid grid-cols-2 gap-4 w-full p-5 lg:p-10">
             {previews.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt={`preview-${i}`}
-                className="file_uploader-img rounded-lg"
-              />
+              <div key={i} className="relative">
+                <img
+                  src={src}
+                  alt={`preview-${i}`}
+                  className="file_uploader-img rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation(); // prevent dropzone click
+                    removeFile(i);
+                  }}
+                  className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             ))}
           </div>
           <p className="file_uploader-label mt-2">

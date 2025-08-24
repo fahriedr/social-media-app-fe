@@ -18,13 +18,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { useUserContext } from "@/context/AuthContext";
 import { useCreatePost, useUpdatePost } from "@/lib/react-query/queries";
 import FileUploader from "../shared/FileUploader";
-import { INewPost } from "@/types";
+import { INewPost, IPost, IUpdatePost } from "@/types";
 import Loader from "../shared/Loader";
 import { useState } from "react";
 import { uploadFileHelper } from "@/lib/supabase/upload-file-helper";
 
 type PostFormProps = {
-  post?: INewPost;
+  post?: INewPost | IPost;
   action: "Create" | "Update";
 };
 
@@ -40,15 +40,15 @@ const PostForm = ({ post, action }: PostFormProps) => {
   const form = useForm<z.infer<typeof PostValidation>>({
     resolver: zodResolver(PostValidation),
     defaultValues: {
-      caption: post ? post?.caption : "",
-      media: [],
+      caption: post ? post.caption : "",
+      media: post ? post.media.map(data => data.link_url) : [],
     },
   });
 
   // Query
   const { mutateAsync: createPost, isPending: isLoadingCreate } =
     useCreatePost();
-  const { isPending: isLoadingUpdate } =
+  const { mutateAsync: updatePost, isPending: isLoadingUpdate } =
     useUpdatePost();
 
   const uploadMedia = async (value: z.infer<typeof PostValidation>) => {
@@ -96,8 +96,6 @@ const PostForm = ({ post, action }: PostFormProps) => {
         media: uploadFiles
       }
 
-      console.log(post, "post")
-
       const newPost = await createPost(post)
 
       if (!newPost) {
@@ -107,10 +105,25 @@ const PostForm = ({ post, action }: PostFormProps) => {
       }
       navigate("/");
 
+    } else {
+      // Update
+      const postUpdate: IUpdatePost = {
+        caption: value.caption,
+        media: uploadFiles
+      }
+
+      const updatedPost = await updatePost({post: postUpdate, postId: post?.id as number})
+
+      if (!updatedPost) {
+        toast({
+          title: `${action} post failed. Please try again.`,
+        });
+      }
+      setIsLoading(false)
     }
 
     setIsLoading(false)
-
+    navigate("/");
   };
 
   return (
@@ -144,9 +157,8 @@ const PostForm = ({ post, action }: PostFormProps) => {
               <FormControl>
                 <FileUploader
                   fieldChange={field.onChange}
-                  media={post?.media}
+                  media={post?.media.map(data => data.link_url) || []}
                   multiple={true}
-                  type="post"
                 />
               </FormControl>
               <FormMessage className="shad-form_message" />

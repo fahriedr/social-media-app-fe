@@ -9,12 +9,14 @@ type CarouselProps = {
 
 const Carousel = ({ items }: CarouselProps) => {
     return (
-        <Swiper spaceBetween={10}
+        <Swiper 
+            spaceBetween={10}
             slidesPerView={1}
             modules={[Navigation, Pagination]}
             navigation
             pagination={{ clickable: true }}
-            className="post-carousel">
+            // className="post-carousel"
+        >
             {items.map((item, idx) => (
                 <SwiperSlide key={idx}>{item}</SwiperSlide>
             ))}

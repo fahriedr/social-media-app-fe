@@ -14,5 +14,5 @@ export const SigninValidation = z.object({
 
 export const PostValidation = z.object({
   caption: z.string().min(5, { message: "Minimum 5 characters." }).max(2200, { message: "Maximum 2,200 caracters" }),
-  media: z.custom<File[]>(),
+  media: z.custom<File[] | string[]>(),
 });

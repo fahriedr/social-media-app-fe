@@ -17,8 +17,6 @@ export type INewPost = {
 };
 
 export type IUpdatePost = {
-  id: number;
-  postId: number;
   caption: string;
   media: string[]
 };
@@ -50,7 +48,9 @@ export type IPost = {
   _count: {
     likes: number;
     comments: number;
-  }
+  },
+  isLiked: boolean,
+  isBookmarked: boolean,
 }
 
 type PostUser = {
@@ -59,7 +59,7 @@ type PostUser = {
   avatar: string;
 }
 
-type PostMedia = {
+export type PostMedia = {
   id: number;
   link_url: string;
   timestamp: string;
